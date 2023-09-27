@@ -12,6 +12,8 @@ externalServices:
 metrics:
   apiserver:
     enabled: true
+  etcd:
+    enabled: true
 
 logs:
   pod_logs:

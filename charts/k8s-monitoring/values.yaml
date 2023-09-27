@@ -360,6 +360,30 @@ metrics:
     # -- The list of API Server metrics that will be scraped by the Agent
     allowList: []
 
+  # Container metrics from Etcd
+  etcd:
+    # -- Scrape container metrics from Etcd
+    enabled: false
+
+    # -- The port number, typically defined with --listen-metrics-urls
+    port: 2381
+
+    # -- (string) How frequently to scrape metrics from the API ServerEtcd
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
+    # -- (string) Rule blocks to be added to the discovery.relabel component for Etcd.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    extraRelabelingRules:
+
+    # -- (string) Rule blocks to be added to the prometheus.relabel component for Etcd.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    extraMetricRelabelingRules:
+
+    # -- The list of Etcd metrics that will be scraped by the Agent
+    allowList: []
+
   # Cost related metrics from OpenCost
   cost:
     # -- Scrape cost metrics from OpenCost

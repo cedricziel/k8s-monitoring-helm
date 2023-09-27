@@ -1,60 +1,56 @@
-{{ define "agent.config.apiserver" }}
-// cAdvisor
-discovery.relabel "apiserver" {
-  targets = discovery.kubernetes.services.targets
+{{ define "agent.config.etcd" }}
+// Etcd
+discovery.relabel "etcd" {
+  targets = discovery.kubernetes.pods.targets
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
-    regex = "default"
+    regex = "kube-system"
     action = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_service_name"]
-    regex = "kubernetes"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    regex = "etcd.+"
     action = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_service_port_name"]
-    regex = "https"
-    action = "keep"
+    source_labels = ["__address__"]
+    regex = "(.+?)(\\:\\d)?"
+    replacement = "$1:{{ .Values.metrics.etcd.port }}"
+    target_label = "__address__"
   }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
-{{- if .Values.metrics.apiserver.extraRelabelingRules }}
-{{ .Values.metrics.apiserver.extraRelabelingRules | indent 2 }}
+{{- if .Values.metrics.etcd.extraRelabelingRules }}
+{{ .Values.metrics.etcd.extraRelabelingRules | indent 2 }}
 {{- end }}
 }
 
-prometheus.scrape "apiserver" {
-  job_name   = "integrations/kubernetes/apiserver"
-  targets    = discovery.relabel.apiserver.output
-  scheme     = "https"
-  scrape_interval = {{ .Values.metrics.apiserver.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-  tls_config {
-    insecure_skip_verify = true
-  }
+prometheus.scrape "etcd" {
+  job_name = "integrations/kubernetes/etcd"
+  targets = discovery.relabel.etcd.output
+  scrape_interval = {{ .Values.metrics.etcd.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  forward_to = [prometheus.relabel.etcd.receiver]
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
   }
 {{- end }}
-  forward_to = [prometheus.relabel.apiserver.receiver]
 }
 
-prometheus.relabel "apiserver" {
-{{- if .Values.metrics.apiserver.allowList }}
+prometheus.relabel "etcd" {
+{{- if .Values.metrics.etcd.allowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.apiserver.allowList }}"
+    regex = "up|{{ join "|" .Values.metrics.etcd.allowList }}"
     action = "keep"
   }
 {{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
-{{- if .Values.metrics.apiserver.extraMetricRelabelingRules }}
-{{ .Values.metrics.apiserver.extraMetricRelabelingRules | indent 2 }}
+{{- if .Values.metrics.etcd.extraMetricRelabelingRules }}
+{{ .Values.metrics.etcd.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }

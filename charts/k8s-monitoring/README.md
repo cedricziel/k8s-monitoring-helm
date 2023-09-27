@@ -128,6 +128,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
 | metrics.cost.scrapeInterval | string | 60s | How frequently to scrape metrics from OpenCost. Overrides metrics.scrapeInterval |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
+| metrics.etcd.allowList | list | `[]` | The list of Etcd metrics that will be scraped by the Agent |
+| metrics.etcd.enabled | bool | `false` | Scrape container metrics from Etcd |
+| metrics.etcd.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for Etcd. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.etcd.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for Etcd. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.etcd.port | int | `2381` |  |
+| metrics.etcd.scrapeInterval | string | 60s | How frequently to scrape metrics from the API ServerEtcd Overrides metrics.scrapeInterval |
 | metrics.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for all metric sources. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for all metric sources. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |

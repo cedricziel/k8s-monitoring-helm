@@ -33,10 +33,10 @@ kind: ServiceAccount
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.19.3
+    helm.sh/chart: opencost-1.20.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.105.2"
+    app.kubernetes.io/version: "1.106.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
@@ -254,6 +254,41 @@ data:
     }
     
     prometheus.relabel "apiserver" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Etcd
+    discovery.relabel "etcd" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "kube-system"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        regex = "etcd.+"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__address__"]
+        regex = "(.+?)(\\:\\d)?"
+        replacement = "$1:2381"
+        target_label = "__address__"
+      }
+    }
+    
+    prometheus.scrape "etcd" {
+      job_name = "integrations/kubernetes/etcd"
+      targets = discovery.relabel.etcd.output
+      scrape_interval = "60s"
+      forward_to = [prometheus.relabel.etcd.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "etcd" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     
@@ -41887,10 +41922,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.19.3
+    helm.sh/chart: opencost-1.20.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.105.2"
+    app.kubernetes.io/version: "1.106.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 rules:
@@ -42014,10 +42049,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.19.3
+    helm.sh/chart: opencost-1.20.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.105.2"
+    app.kubernetes.io/version: "1.106.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 roleRef:
@@ -42114,10 +42149,10 @@ kind: Service
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.19.3
+    helm.sh/chart: opencost-1.20.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.105.2"
+    app.kubernetes.io/version: "1.106.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -42350,10 +42385,10 @@ kind: Deployment
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.19.3
+    helm.sh/chart: opencost-1.20.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.105.2"
+    app.kubernetes.io/version: "1.106.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -42378,7 +42413,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "quay.io/kubecost1/kubecost-cost-model:prod-1.105.2"
+          image: "quay.io/kubecost1/kubecost-cost-model:prod-1.106.1"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9003
@@ -42420,6 +42455,7 @@ spec:
                 secretKeyRef:
                   name: grafana-agent-credentials
                   key: prometheus_password
+            # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
             - name: EMIT_KSM_V1_METRICS

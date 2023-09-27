@@ -39,6 +39,10 @@
       {{- include "agent.config.apiserver" . }}
     {{- end }}
 
+    {{- if .Values.metrics.etcd.enabled }}
+      {{- include "agent.config.etcd" . }}
+    {{- end }}
+
     {{- if (index .Values.metrics "kube-state-metrics").enabled }}
       {{- include "agent.config.kube_state_metrics" . }}
     {{- end }}
